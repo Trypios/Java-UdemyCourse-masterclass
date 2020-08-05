@@ -5,18 +5,24 @@ public class LinkedListChallenge {
     private static Scanner scanner = new Scanner(System.in);
     private static boolean isActive = true;
     private static LinkedList<Song> activePlaylist;
+    private static boolean forward = true;
+    private static Song currentSong;
 
     public static void main(String[] args) {
 
-        init();
+        activePlaylist = init();
         ListIterator<Song> playlistIterator = activePlaylist.listIterator();
-        while (isActive) {
+        options();
+        currentSong = playlistIterator.next();
+        System.out.println("Currently playing track: ");
+        System.out.printf("%s%n", currentSong.getTitle());
+        while (isActive && activePlaylist.size() > 0) {
             menu(playlistIterator);
         }
         
     }
 
-    static void init() {
+    static LinkedList<Song> init() {
         Album songsAboutJane = new Album("Songs about Jane", "Maroon 5");
         songsAboutJane.addSong(new Song("Harder to Breathe", "Maroon 5", 3.54));
         songsAboutJane.addSong(new Song("This Love", "Maroon 5", 2.36));
@@ -35,11 +41,22 @@ public class LinkedListChallenge {
             }
         }
         favorites.printTracklist();
-        activePlaylist = new LinkedList<Song>(favorites.getTracklist());
+        return new LinkedList<Song>(favorites.getTracklist());
     }
 
-    static void menu(ListIterator iterator) {
-        Song currentSong;
+    static void options() {
+        System.out.println("Menu options:");
+        System.out.println("------------");
+        System.out.println("   0 = Quit");
+        System.out.println("   1 = Go to previous track");
+        System.out.println("   2 = Replay track");
+        System.out.println("   3 = Go to next track");
+        System.out.println("   4 = Remove current track from playlist");
+        System.out.println("   5 = View options");
+    }
+
+    static void menu(ListIterator<Song> iterator) {
+        System.out.println("Press '5' to view MENU");
         String input = scanner.nextLine();
         switch (input) {
             case "0":
@@ -48,30 +65,85 @@ public class LinkedListChallenge {
                 break;
             case "1":
                 // previous track
+                if (forward) {
+                    if (iterator.hasPrevious()) {
+                        iterator.previous();
+                    }
+                    forward = false;
+                }
                 if (iterator.hasPrevious()) {
                     currentSong = iterator.previous();
                     System.out.println("Previous track: ");
                     System.out.printf("%s%n", currentSong.getTitle());
+                } else {
+                    System.out.println("Top of the playlist, now playing:");
+                    currentSong = iterator.next();
+                    System.out.printf("%s%n", currentSong.getTitle());
+                    forward = true;
                 }
                 break;
-            case "2":
+            case "3":
                 // next track
+                if (!forward) {
+                    if (iterator.hasNext()) {
+                        iterator.next();
+                    }
+                    forward = true;
+                }
                 if (iterator.hasNext()) {
                     currentSong = iterator.next();
                     System.out.println("Next track: ");
                     System.out.printf("%s%n", currentSong.getTitle());
+                } else {
+                    System.out.println("End of the playlist");
+                    // restart playlist
+                    while (iterator.hasPrevious()) {
+                        iterator.previous();
+                    }
+                    currentSong = iterator.next();
+                    System.out.println("Replaying playlist from 1st track: ");
+                    System.out.printf("%s%n", currentSong.getTitle());
                 }
                 break;
-            case "3":
+            case "2":
                 // replay track
-                System.out.println("Replaying track: ");
+                if (forward) {
+                    currentSong = iterator.previous();
+                    forward = false;
+                } else {
+                    currentSong = iterator.next();
+                    forward = true;
+                }
+                System.out.printf("Replaying track: %s%n", currentSong.getTitle());
                 break;
             case "4":
                 // remove track from playlist
+                iterator.remove();
                 System.out.println("Removed track from playlist: ");
+                System.out.printf("%s%n", currentSong.getTitle());
+                if (iterator.hasNext()) {
+                    currentSong = iterator.next();
+                    forward = true;
+                } else if (iterator.hasPrevious()) {
+                    currentSong = iterator.previous();
+                    forward = false;
+                } else {
+                    System.out.println("No more songs in playlist. Shutting down...");
+                    isActive = false;
+                    break;
+                }
+                System.out.println("Top of the playlist, now playing:");
+                System.out.printf("%s%n", currentSong.getTitle());
+                break;
+            case "5":
+                // view menu options
+                options();
                 break;
             default:
                 System.out.println("Invalid input");
+        }
+        for (int i = 0; i < 6; i++) {
+            System.out.println();
         }
     }
 
